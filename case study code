@@ -1,0 +1,69 @@
+# Step 4-8 Simulation in pure Python (no external libraries)
+
+# Sample small dataset (Yes=1, No=0)
+data = [
+    {'Burger':1, 'Fries':1, 'Coke':0, 'Wrap':1, 'Salad':0, 'Dessert':1, 'Coffee':0, 'Breakfast':1, 'Snack':1, 'HappyMeal':0, 'DriveThru':1, 'Gender':'Male', 'Age':25, 'VisitFrequency':3, 'Like':4},
+    {'Burger':1, 'Fries':0, 'Coke':1, 'Wrap':0, 'Salad':1, 'Dessert':1, 'Coffee':1, 'Breakfast':0, 'Snack':1, 'HappyMeal':1, 'DriveThru':0, 'Gender':'Female', 'Age':22, 'VisitFrequency':2, 'Like':5},
+    {'Burger':0, 'Fries':1, 'Coke':1, 'Wrap':1, 'Salad':0, 'Dessert':0, 'Coffee':1, 'Breakfast':1, 'Snack':0, 'HappyMeal':1, 'DriveThru':1, 'Gender':'Female', 'Age':30, 'VisitFrequency':5, 'Like':3},
+    {'Burger':1, 'Fries':1, 'Coke':1, 'Wrap':0, 'Salad':1, 'Dessert':0, 'Coffee':0, 'Breakfast':1, 'Snack':1, 'HappyMeal':0, 'DriveThru':1, 'Gender':'Male', 'Age':28, 'VisitFrequency':4, 'Like':4}
+]
+
+# Step 4: PCA simulation (just print variance approximation)
+print("Step 4: PCA simulation")
+print("Explained variance ratio (simulated): [0.6, 0.4]")
+
+# Step 5: Simple clustering simulation (based on Burger+Fries)
+print("\nStep 5: Clustering simulation")
+for i, d in enumerate(data):
+    d['Segment'] = 0 if d['Burger'] + d['Fries'] >= 2 else 1
+segments = [d['Segment'] for d in data]
+print("Cluster assignments:", segments)
+
+# Step 6: Profiling each segment
+print("\nStep 6: Segment profiles")
+segment_profile = {}
+for d in data:
+    seg = d['Segment']
+    if seg not in segment_profile:
+        segment_profile[seg] = {'count':0, 'sum':{k:0 for k in d if isinstance(d[k], int)}}
+    segment_profile[seg]['count'] += 1
+    for k in d:
+        if isinstance(d[k], int):
+            segment_profile[seg]['sum'][k] += d[k]
+
+for seg in segment_profile:
+    count = segment_profile[seg]['count']
+    mean_dict = {k:v/count for k,v in segment_profile[seg]['sum'].items()}
+    print(f"Segment {seg} profile:", mean_dict)
+
+# Step 7: Gender and Age description
+print("\nStep 7: Gender distribution and age summary")
+gender_dist = {}
+age_stats = {}
+for d in data:
+    seg = d['Segment']
+    gender_dist.setdefault(seg, {'Male':0,'Female':0})[d['Gender']] += 1
+    age_stats.setdefault(seg, []).append(d['Age'])
+print("Gender distribution:", gender_dist)
+for seg in age_stats:
+    ages = age_stats[seg]
+    print(f"Segment {seg} age stats: min={min(ages)}, max={max(ages)}, avg={sum(ages)/len(ages):.2f}")
+
+# Step 8: Segment evaluation (Visit vs Like)
+print("\nStep 8: Segment evaluation")
+eval_summary = {}
+for d in data:
+    seg = d['Segment']
+    eval_summary.setdefault(seg, {'VisitSum':0, 'LikeSum':0, 'FemaleCount':0, 'Count':0})
+    eval_summary[seg]['VisitSum'] += d['VisitFrequency']
+    eval_summary[seg]['LikeSum'] += d['Like']
+    if d['Gender']=='Female':
+        eval_summary[seg]['FemaleCount'] +=1
+    eval_summary[seg]['Count'] +=1
+
+for seg in eval_summary:
+    e = eval_summary[seg]
+    visit_mean = e['VisitSum']/e['Count']
+    like_mean = e['LikeSum']/e['Count']
+    female_percent = e['FemaleCount']/e['Count']
+    print(f"Segment {seg}: VisitMean={visit_mean:.2f}, LikeMean={like_mean:.2f}, Female%={female_percent*100:.1f}")
